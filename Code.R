@@ -23,305 +23,190 @@ data$continent <- countrycode(data$country_text_id, "iso3c", "continent")
 ################## Democracy Indices by Continent
 ######################################################################################################################################################################################################################################################################## 
 
+# Define a function to create the plots
+create_plot <- function(data, index, title) {
+  data %>%
+    filter(year == 2022 & continent != "NA") %>%
+    select(index, year, continent) %>%
+    na.omit() %>%
+    ggplot(aes(continent, get(index), fill = continent)) +
+    geom_boxplot(color = "black", size = 0.8) +
+    scale_fill_manual(values = c("Europe" = "dodgerblue2", "Americas" = "chocolate1", "Asia" = "firebrick2", "Africa" = "chartreuse3", "Oceania" = "darkorchid1")) +
+    labs(x = "Continent", y = "Polyarchy", title = title) +
+    theme_fivethirtyeight()
+}
+
 ##### Electoral Democracy Index
 ####################################################
 
-df3 <- data %>% filter(year == 2022 & continent != "NA") %>% select(v2x_polyarchy, year, continent, country_name) %>% na.omit()
-
-df3 %>% ggplot(aes(continent, v2x_polyarchy, fill = continent)) +
-  geom_boxplot(color = "black", size = 0.8) +
-  scale_fill_manual(values = c("Europe" = "dodgerblue2", "Americas" = "chocolate1", "Asia" = "firebrick2", "Africa" = "chartreuse3", "Oceania" = "darkorchid1")) +
-  labs(x = "Continent", y = "Polyarchy", title = "Electoral Democracy Index by Continent") +
-  theme_fivethirtyeight()
+create_plot(data, "v2x_polyarchy", "Electoral Democracy Index by Continent")
 
 ##### Liberal Democracy Index
 ####################################################
 
-df3 <- data %>% filter(year == 2022 & continent != "NA") %>% select(v2x_libdem, year, continent) %>% na.omit()
-
-df3 %>% ggplot(aes(continent, v2x_libdem, fill = continent)) +
-  geom_boxplot(color = "black", size = 0.8) +
-  scale_fill_manual(values = c("Europe" = "dodgerblue2", "Americas" = "chocolate1", "Asia" = "firebrick2", "Africa" = "chartreuse3", "Oceania" = "darkorchid1")) +
-  labs(x = "Continent", y = "Polyarchy", title = "Liberal Democracy Index by Continent") +
-  theme_fivethirtyeight()
+create_plot(data, "v2x_libdem", "Liberal Democracy Index by Continent")
 
 ##### Participatory Democracy Index
 ####################################################
 
-df3 <- data %>% filter(year == 2022 & continent != "NA") %>% select(v2x_partipdem, year, continent) %>% na.omit()
-
-df3 %>% ggplot(aes(continent, v2x_partipdem, fill = continent)) +
-  geom_boxplot(color = "black", size = 0.8) +
-  scale_fill_manual(values = c("Europe" = "dodgerblue2", "Americas" = "chocolate1", "Asia" = "firebrick2", "Africa" = "chartreuse3", "Oceania" = "darkorchid1")) +
-  labs(x = "Continent", y = "Polyarchy", title = "Participatory Democracy Index by Continent") +
-  theme_fivethirtyeight()
+create_plot(data, "v2x_partipdem", "Participatory Democracy Index by Continent")
 
 ##### Deliberative Democracy Index
 ####################################################
 
-df3 <- data %>% filter(year == 2022 & continent != "NA") %>% select(v2x_delibdem, year, continent) %>% na.omit()
-
-df3 %>% ggplot(aes(continent, v2x_delibdem, fill = continent)) +
-  geom_boxplot(color = "black", size = 0.8) +
-  scale_fill_manual(values = c("Europe" = "dodgerblue2", "Americas" = "chocolate1", "Asia" = "firebrick2", "Africa" = "chartreuse3", "Oceania" = "darkorchid1")) +
-  labs(x = "Continent", y = "Polyarchy", title = "Deliberative Democracy Index by Continent") +
-  theme_fivethirtyeight()
+create_plot(data, "v2x_delibdem", "Deliberative Democracy Index by Continent")
 
 ##### Egalitarian Democracy Index
 ####################################################
 
-df3 <- data %>% filter(year == 2022 & continent != "NA") %>% select(v2x_egaldem, year, continent) %>% na.omit()
-
-df3 %>% ggplot(aes(continent, v2x_egaldem, fill = continent)) +
-  geom_boxplot(color = "black", size = 0.8) +
-  scale_fill_manual(values = c("Europe" = "dodgerblue2", "Americas" = "chocolate1", "Asia" = "firebrick2", "Africa" = "chartreuse3", "Oceania" = "darkorchid1")) +
-  labs(x = "Continent", y = "Polyarchy", title = "Egalitarian Democracy Index by Continent") +
-  theme_fivethirtyeight()
+create_plot(data, "v2x_egaldem", "Egalitarian Democracy Index by Continent")
 
 ######################################################################################################################################################################################################################################################################## 
 ################## Major vs High Fluctuating Countries
 ######################################################################################################################################################################################################################################################################## 
 
-### Subsetting the high level democracy indices
-data <- data.frame(data)
-High_Level_Indices = data[c("country_name","year","v2x_polyarchy","v2x_polyarchy","v2x_polyarchy","v2x_libdem","v2x_partipdem","v2x_delibdem","v2x_egaldem")]
+# Subset the high level democracy indices
+High_Level_Indices <- data[c("country_name","year","v2x_polyarchy","v2x_libdem","v2x_partipdem","v2x_delibdem","v2x_egaldem")]
 
-### Defining a function that takes the tibble and a column name
-### and returns the countries with the highest fluctuation
-### in that column
-top_fluctuation_countries <- function(data,column) {
-  data %>% 
-  group_by(country_name) %>% 
-  summarize(min_v2x_polyarchy = min(.data[[column]], na.rm = TRUE),
-            max_v2x_polyarchy = max(.data[[column]], na.rm = TRUE)) %>% 
-  ungroup() %>%
-  mutate(diff = max_v2x_polyarchy - min_v2x_polyarchy) %>%
-  arrange(desc(diff)) %>%
-  select(country_name) %>%
-  head(3)
+# Define a function that takes the data and a column name and returns the countries with the highest fluctuation in that column
+top_fluctuation_countries <- function(data, column) {
+  data %>%
+    group_by(country_name) %>%
+    summarize(min_value = min(.data[[column]], na.rm = TRUE),
+              max_value = max(.data[[column]], na.rm = TRUE)) %>%
+    ungroup() %>%
+    mutate(diff = max_value - min_value) %>%
+    arrange(desc(diff)) %>%
+    select(country_name) %>%
+    head(3)
+}
 
-##### Electoral Democracy
+# Define a function to create the plots
+create_plot <- function(data, index, title, countries) {
+  data %>%
+    filter(country_name %in% countries & year >= 1900) %>%
+    ggplot(aes(x=year, y=get(index), color=country_name)) +
+    geom_line(size = 1) +
+    labs(x="Year", y=index, color = "Country") +
+    theme_fivethirtyeight() +
+    ggtitle(title)
+}
+
+# Major countries
+major_countries <- c("India","France", "Russia","United States of America","United Kingdom","China")
+
+# Indices
+indices <- c("v2x_polyarchy", "v2x_libdem", "v2x_partipdem", "v2x_delibdem", "v2x_egaldem")
+
+# Titles
+titles <- c("Electoral Democracy Index in Major Countries", "Liberal Democracy Index in Major Countries", "Participatory Democracy Index in Major Countries", "Deliberative Democracy Index in Major Countries", "Egalitarian Democracy Index in Major Countries")
+
+##### Major Countries
 ####################################################
 
-## Major Countries
-#------------------------------------------
+for(i in 1:length(indices)) {
+  print(create_plot(High_Level_Indices, indices[i], titles[i], major_countries))
+}
 
-### Electoral democracy in major countries
-High_Level_Indices %>%
-  filter(country_name %in% c("India","France", "Russia","United States of America","United Kingdom","China")) %>%
-  ggplot(aes(x=year,y=v2x_polyarchy,color=country_name)) + geom_line(size = 1) + labs(x="Year",y="Electoral Democracy", color = "Country") +
-  theme_fivethirtyeight() +
-  ggtitle("Electoral Democracy Index in Major Countries")
-
-## High Fluctuation Countries
-#------------------------------------------
-
-High_Level_Indices %>%
-  filter(country_name %in% ((top_fluctuation_countries(High_Level_Indices,"v2x_polyarchy")$country_name))) %>%
-  ggplot(data=.,aes(x=year,y=v2x_polyarchy,color=country_name)) + geom_line(size = 1) +
-  ggtitle("Top Fluctuating Countries by Electoral Democracy") +
-  theme_fivethirtyeight() + labs(x="Year",y="Electoral Democracy", color = "Country")
-
-##### Liberal Democracy
+##### High Fluctuation Countries
 ####################################################
-
-## Major Countries
-#------------------------------------------
-
-High_Level_Indices %>%
-  filter(country_name %in% c("India","France", "Russia","United States of America","United Kingdom","China")) %>%
-  ggplot(aes(x=year,y=v2x_libdem,color=country_name)) + geom_line(size = 1) + labs(x="Year",y="Liberal Democracy", color = "Country") +
-  theme_fivethirtyeight() +
-  ggtitle("Liberal Democracy Index in Major Countries")
-
-## High Fluctuation Countries
-#------------------------------------------
-
-High_Level_Indices %>%
-  filter(country_name %in% ((top_fluctuation_countries(High_Level_Indices,"v2x_libdem")$country_name))) %>%
-  ggplot(data=.,aes(x=year,y=v2x_libdem,color=country_name)) + geom_line(size = 1) +
-  ggtitle("Top Fluctuating Countries by Liberal Democracy") +
-  theme_fivethirtyeight() + labs(x="Year",y="Liberal Democracy", color = "Country")
-
-##### Participatory Democracy
-####################################################
-
-## Major Countries
-#------------------------------------------
-
-High_Level_Indices %>%
-  filter(country_name %in% c("India","France", "Russia","United States of America","United Kingdom","China")) %>%
-  ggplot(aes(x=year,y=v2x_partipdem,color=country_name)) + geom_line(size = 1) + labs(x="Year",y="Participatory Democracy", color = "Country") +
-  theme_fivethirtyeight() +
-  ggtitle("Participatory Democracy Index in Major Countries")
-
-## High Fluctuation Countries
-#------------------------------------------
-
-High_Level_Indices %>%
-  filter(country_name %in% ((top_fluctuation_countries(High_Level_Indices,"v2x_partipdem")$country_name))) %>%
-  ggplot(data=.,aes(x=year,y=v2x_partipdem,color=country_name)) + geom_line(size = 1) +
-  ggtitle("Top Fluctuating Countries by Participatory Democracy") +
-  theme_fivethirtyeight() + labs(x="Year",y="Participatory Democracy", color = "Country")
-
-##### Deliberative Democracy
-####################################################
-
-## Major Countries
-#------------------------------------------
-
-High_Level_Indices %>%
-  filter(country_name %in% c("India","France","Russia","United States of America","United Kingdom","China")& year >= 1900) %>%
-  ggplot(aes(x=year,y=v2x_delibdem,color=country_name)) + geom_line(size = 1) + labs(x="Year",y="Deliberative Democracy", color = "Country") +
-  theme_fivethirtyeight() +
-  ggtitle("Deliberative Democracy Index in Major Countries")
-
-## High Fluctuation Countries
-#------------------------------------------
-
-High_Level_Indices %>%
-  filter(country_name %in% ((top_fluctuation_countries(High_Level_Indices,"v2x_delibdem")$country_name))& year >= 1900) %>%
-  ggplot(data=.,aes(x=year,y=v2x_delibdem,color=country_name)) + geom_line(size = 1) +
-  ggtitle("Top Fluctuating Countries by Deliberative Democracy") +
-  theme_fivethirtyeight() + labs(x="Year",y="Deliberative Democracy", color = "Country")
-
-##### Egalitarian Democracy
-####################################################
-
-## Major Countries
-#------------------------------------------
-
-High_Level_Indices %>%
-  filter(country_name %in% c("India","France","Russia","United States of America","United Kingdom","China") & year >= 1900) %>%
-  ggplot(aes(x=year,y=v2x_egaldem,color=country_name)) + geom_line() + labs(x="Year",y="Egalitarian Democracy") + geom_line(size = 1) +
-  ggtitle("Top Fluctuating Countries by Egalitarian Democracy") +
-  theme_fivethirtyeight() + labs(x="Year",y="Egalitarian Democracy", color = "Country")
-
-## High Fluctuation Countries
-#------------------------------------------
-
-High_Level_Indices %>%
-  filter(country_name %in% ((top_fluctuation_countries(High_Level_Indices,"v2x_egaldem")$country_name)) & year >= 1900) %>%
-  ggplot(data=.,aes(x=year,y=v2x_egaldem,color=country_name)) + geom_line(size = 1) +
-  ggtitle("Top Fluctuating Countries by Egalitarian Democracy") +
-  theme_fivethirtyeight() + labs(x="Year",y="Egalitarian Democracy", color = "Country")
+# Use the function to create the plots for high fluctuation countries
+for(i in 1:length(indices)) {
+  fluctuation_countries <- top_fluctuation_countries(High_Level_Indices, indices[i])$country_name
+  print(create_plot(High_Level_Indices, indices[i], paste("Top Fluctuating Countries by", indices[i]), fluctuation_countries))
+}
 
 ######################################################################################################################################################################################################################################################################## 
 ################## Slope Coefficients
 ######################################################################################################################################################################################################################################################################## 
 
-#Keep only rows after after 1899 that have a continent
-data2 <- data %>% 
-  filter(!is.na(continent)) %>% 
-  filter(year >= 1900)
-
-#Keep only relevant columns
-nested_data <- data2 %>% 
-  select(country_name, continent, year, v2x_polyarchy)
-
-#Nest the variables important to model
-nested_data <- nested_data %>% 
-  nest(data = c(year, v2x_polyarchy))
-
-#Model
-fit_lm <- function(data) {
-  lm(v2x_polyarchy ~ year, data = data)
+# Define a function to create the models
+create_model <- function(data, index) {
+  data %>%
+    filter(!is.na(continent) & year >= 1900) %>%
+    select(country_name, continent, year, get(index)) %>%
+    nest(data = c(year, get(index))) %>%
+    mutate(model = map(data, ~lm(get(index) ~ year, data = .))) %>%
+    mutate(tidy_model = map(model, broom::tidy)) %>%
+    unnest(cols = tidy_model) %>%
+    filter(term == "year") %>%
+    select(continent, country_name, estimate, statistic)
 }
 
-#Map the Models
-lm_models <- nested_data %>% 
-  mutate(model = map(data, fit_lm))
+# Indices
+indices <- c("v2x_polyarchy", "v2x_libdem", "v2x_partipdem", "v2x_delibdem", "v2x_egaldem")
 
-tidy_data <- lm_models %>% 
-  mutate(tidy_model = map(model, broom::tidy)) %>% 
-  unnest(cols = tidy_model) %>% 
-  select(continent, country_name, term, estimate, statistic)
+# Use the function to create the models for each index
+models <- lapply(indices, create_model, data = data)
 
-#Find the slope coefficients based on the models
-slope_data <- tidy_data %>% 
-  filter(term == "year") %>% 
-  select(continent, country_name, estimate, statistic)
-
-#Define colors
+# Define colors
 colors <- c("Europe" = "dodgerblue2", "Americas" = "chocolate1", "Asia" = "firebrick2", "Africa" = "chartreuse3", "Oceania" = "darkorchid1")
 
-#Beeswarm plot for slope coefficient
-ggplot(slope_data, aes(x = continent, y = estimate, color = continent)) +
-  geom_beeswarm() +
-  scale_color_manual(values = colors) +
-  labs(x = "Continent", y = "Slope Coefficient", title = "Slope Coefficient by Continent") +
-  theme_fivethirtyeight()
+# Beeswarm plot for slope coefficient
+lapply(models, function(model) {
+  ggplot(model, aes(x = continent, y = estimate, color = continent)) +
+    geom_beeswarm() +
+    scale_color_manual(values = colors) +
+    labs(x = "Continent", y = "Slope Coefficient", title = "Slope Coefficient by Continent") +
+    theme_fivethirtyeight()
+})
 
 ######################################################################################################################################################################################################################################################################## 
 ################## Top Countries by Democracy Index
 ######################################################################################################################################################################################################################################################################## 
 
-data$flag_image <- ""
-
-# loop through country_names
-for (country_name in unique(data$country_name)) {
+# Define a function to get the flag image URL
+get_flag_url <- function(country_name) {
+  # make the wikipedia URL for the country
+  url <- paste0("https://en.wikipedia.org/wiki/", gsub(" ", "_", country_name))
   
-  tryCatch({
-    # make the wikipedia URL for the country
-    url <- paste0("https://en.wikipedia.org/wiki/", gsub(" ", "_", country_name))
-    
-    # Georgia separate to not confuse with US state of Georgia
-    if (country_name == "Georgia") {
-      url = "https://en.wikipedia.org/wiki/Georgia_(country)"
-    }
-    
-    # (Republic of) Ireland separate to not confuse with island of Ireland
-    if (country_name == "Ireland") {
-      url = "https://en.wikipedia.org/wiki/Republic_of_Ireland"
-    }
-    
-    # Palestine separate as the dataset separates west bank and gaza, so the web scraping gives both the Palestinian flag
-    if (grepl("Palestine", country_name)) {
-      url <- "https://en.wikipedia.org/wiki/State_of_Palestine"
-    }
-    
-    page <- read_html(url)
-    
-    # find the main image element
-    image_elem <- page %>%
-      html_nodes(".infobox img:first-child")
-    
-    # if image element exists, extract image URL 
-    # update the row in the dataset
-    if (length(image_elem) > 0) {
-      image_url <- image_elem %>% first() %>% html_attr("src")
-      data$flag_image[data$country_name == country_name] <- paste0("http:", image_url)
-    } else {
-      cat("No image found for ", country_name, "\n")
-    }
-  }, error = function(e) {
-    cat("Error: ", country_name, "\n")
-  })
+  # Special cases
+  if (country_name == "Georgia") {
+    url = "https://en.wikipedia.org/wiki/Georgia_(country)"
+  }
+  if (country_name == "Ireland") {
+    url = "https://en.wikipedia.org/wiki/Republic_of_Ireland"
+  }
+  if (grepl("Palestine", country_name)) {
+    url <- "https://en.wikipedia.org/wiki/State_of_Palestine"
+  }
   
+  page <- read_html(url)
+  
+  # find the main image element
+  image_elem <- page %>%
+    html_nodes(".infobox img:first-child")
+  
+  # if image element exists, extract image URL 
+  if (length(image_elem) > 0) {
+    image_url <- image_elem %>% first() %>% html_attr("src")
+    return(paste0("http:", image_url))
+  } else {
+    cat("No image found for ", country_name, "\n")
+    return(NA)
+  }
 }
 
-# In order to save time later, the images are downloaded locally. 
-# For the purpose of this r markdown the downloading lines have been commented out
-# In order for later code to work, these lines must be uncommented
-for (i in seq_along(data$flag_image)) {
-  filename <- paste0("flag_", data$country_name[i], ".png")
+# Get the flag image URLs
+data$flag_image <- sapply(data$country_name, get_flag_url)
+
+# Define a function to download the flag image
+download_flag <- function(flag_image, country_name) {
+  filename <- paste0("flag_", country_name, ".png")
   filename <- gsub("/", "_", filename)
-  # if (data$flag_image == "") {
-  #   next
-  # }
-  # if (i == 1) {
-  #  link <- data$flag_image[i]
-  #  GET(link, write_disk(filename, overwrite = TRUE))
-  # }
-  # else if (data$flag_image[i-1] != filename) {
-  #  link <- data$flag_image[i]
-  #  GET(link, write_disk(filename, overwrite = TRUE))
-  # }
   
+  # Download the image
+  # Uncomment the following lines to download the images
+  # link <- flag_image
+  # GET(link, write_disk(filename, overwrite = TRUE))
   
-  #Change the flag_image column to the local filename
-  data$flag_image[i] <- filename
+  # Return the filename
+  return(filename)
 }
+
+# Download the flag images and update the flag_image column to the local filename
+# Uncomment the following line to download the images
+# data$flag_image <- mapply(download_flag, data$flag_image, data$country_name)
 
 ##### Static Image
 ####################################################
